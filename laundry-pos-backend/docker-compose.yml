@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: laundry-postgres
+    environment:
+      POSTGRES_DB: laundrypos
+      POSTGRES_USER: laundry
+      POSTGRES_PASSWORD: laundry123
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - laundry-network
+
+  backend:
+    build: .
+    container_name: laundry-backend
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/laundrypos
+      SPRING_DATASOURCE_USERNAME: laundry
+      SPRING_DATASOURCE_PASSWORD: laundry123
+      JWT_SECRET: ${JWT_SECRET:-mySecretKeyForJWTTokenGeneration2024}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    ports:
+      - "8082:8080"
+    networks:
+      - laundry-network
+
+volumes:
+  postgres_data:
+
+networks:
+  laundry-network:
+    driver: bridge

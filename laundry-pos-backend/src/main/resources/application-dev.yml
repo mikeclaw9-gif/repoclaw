@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/laundry
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.laundrypos: DEBUG
