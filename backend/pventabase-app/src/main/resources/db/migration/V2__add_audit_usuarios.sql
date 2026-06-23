@@ -1,3 +1,0 @@
--- V2 ya está incluida en V1; esta migración es un placeholder
--- Las columnas created_by y updated_by ya fueron creadas en V1.
--- Se deja como registro de que la migración fue aplicada.

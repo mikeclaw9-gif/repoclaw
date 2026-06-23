@@ -1,3 +1,0 @@
--- V5 ya está incluida en V4; esta migración es un placeholder
--- La columna documento ya fue creada en V4.
--- Se deja como registro de que la migración fue aplicada.
