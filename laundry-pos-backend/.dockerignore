@@ -1,0 +1,55 @@
+# Maven
+target/
+*.jar
+*.war
+*.ear
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.log
+*.tmp
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Git
+.git/
+.gitignore
+
+# Maven wrapper scripts (optional - keep wrapper for CI)
+# mvnw
+# mvnw.cmd
+# .mvn/
+
+# Test reports
+target/surefire-reports/
+target/failsafe-reports/
+target/site/
+
+# IDEA
+*.idea/
+out/
+
+# VS Code
+.vscode/

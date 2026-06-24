@@ -36,7 +36,7 @@ docker build -t laundry-frontend .
 docker run -p 80:80 laundry-frontend
 ```
 
-En producción, nginx dentro del contenedor redirige `/api` a `http://backend:8082/api`.
+En producción, nginx dentro del contenedor redirige `/api` a `http://backend:8085/api`.
 
 ## Módulos
 

@@ -2,6 +2,8 @@
 
 Backend API REST para POS de lavandería. Spring Boot 3.2.0 / Java 17 / PostgreSQL.
 
+Monorepo en `../` con `laundry-pos-frontend/` hermano.
+
 ---
 
 ## Stack
@@ -16,9 +18,9 @@ Backend API REST para POS de lavandería. Spring Boot 3.2.0 / Java 17 / PostgreS
 
 ---
 
-## Módulos existentes (verificar antes de crear uno nuevo)
+## Módulos
 
-Cada módulo sigue `model/`, `dto/`, `repository/`, `service/`, `controller/`. La excepción es `reports`, que no tiene entidad JPA propia (solo DTOs + servicio que consulta otros módulos).
+Cada módulo sigue `model/`, `dto/`, `repository/`, `service/`, `controller/`. Excepción: `reports` (no tiene entidad propia).
 
 | Módulo | Route | Paquete |
 |---|---|---|
@@ -44,7 +46,7 @@ Cada módulo sigue `model/`, `dto/`, `repository/`, `service/`, `controller/`. L
 - **Constructor injection**: `@RequiredArgsConstructor` en services/controllers/config. Sin `@Autowired`. Excepción: `JwtUtil` usa constructor explícito con `@Value`.
 - **Servicios**: `@Transactional` solo en escritura que modifica múltiples entidades. `orElseThrow(() -> new ResourceNotFoundException(...))`. `IllegalArgumentException` para validación de negocio.
 - **API**: Controller `@RequestMapping` solo el nombre del módulo (ej: `/clients`, no `/api/clients`). El context path `/api` ya está en `application.yml`.
-- **Seguridad**: JWT Bearer. Endpoints públicos: `/auth/**`, `/health`. Roles: `ROLE_ADMIN`, `ROLE_CASHIER`. `/users/**` y `/reports/**` solo ADMIN. CSRF deshabilitado, STATELESS.
+- **Seguridad**: JWT Bearer. Endpoints públicos: `/auth/**`, `/health`, `/actuator/**`, `/swagger-ui.html`, `/swagger-ui/**`, `/v3/api-docs/**`. Roles: `ROLE_ADMIN`, `ROLE_CASHIER`. `/users/**` y `/reports/**` solo ADMIN. CSRF deshabilitado, STATELESS.
 - **Excepciones**: `ResourceNotFoundException` → 404, `BadCredentialsException` → 401, `MethodArgumentNotValidException` → 400, `Exception` → 500. Todas retornan `ErrorResponse(int status, String message, LocalDateTime timestamp)`.
 - **Estilo**: Sin comentarios (solo anotaciones Swagger). `var` para locales. Stream API con `.toList()`. Mensajes en español, identificadores en inglés. snake_case en DB. Enums con valores en español (ej: `OrderStatus { PENDIENTE, EN_PROCESO, LISTO, ENTREGADO }`).
 
@@ -52,12 +54,13 @@ Cada módulo sigue `model/`, `dto/`, `repository/`, `service/`, `controller/`. L
 
 ## Puerto y conexiones
 
-- **Local**: server.port=8082, DB en `localhost:5432` (usuario `miguel`, password `Gallego`, DB `laundry`)
-- **Docker**: EXPOSE 8080, docker-compose mapea `8082:8080`, DB interna en `postgres:5432` (usuario `laundry`, password `laundry123`, DB `laundrypos`)
-- **Swagger UI**: `http://localhost:8082/api/swagger-ui.html`
-- **`ddl-auto: update`** — Hibernate crea/esquemas automáticamente
+- **Puerto**: `server.port=8085` en `application.yml` (activo siempre, sin perfil). Docker EXPOSE 8085, compose mapea `8085:8085`.
+- **DB**: misma en local y docker-compose — `localhost:5432`, usuario `miguel`, password `Gallego`, DB `laundry`.
+- **Swagger UI**: `http://localhost:8085/api/swagger-ui.html`
+- **Redis**: docker-compose incluye Redis 7 en `localhost:6379` (no usado aún desde código).
+- **`ddl-auto: update`** — Hibernate crea esquemas automáticamente.
 
-> Hay dos sets de credenciales DB (dev local vs docker-compose). No commitear credenciales reales.
+> No commitear credenciales reales si cambian. `.gitignore` está en la raíz del monorepo (`../.gitignore`), no dentro del backend.
 
 ---
 
@@ -67,11 +70,11 @@ Cada módulo sigue `model/`, `dto/`, `repository/`, `service/`, `controller/`. L
 ./mvnw clean package -DskipTests
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ./mvnw test
-docker-compose up -d                                    # PostgreSQL + backend
+docker-compose up -d                  # PostgreSQL + Redis + backend
 java -jar target/laundry-pos-backend-1.0.0.jar --spring.profiles.active=prod
 ```
 
-No hay tests aún — `src/test/` está vacío. No hay `.gitignore` ni CI/CD.
+`src/test/` no existe — aún no hay tests. `init-scripts/` existe pero está vacío.
 
 ---
 
@@ -79,9 +82,9 @@ No hay tests aún — `src/test/` está vacío. No hay `.gitignore` ni CI/CD.
 
 | Variable | Default |
 |---|---|
-| `DATASOURCE_URL` / `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/laundrypos` |
-| `DATASOURCE_USERNAME` / `SPRING_DATASOURCE_USERNAME` | `laundry` |
-| `DATASOURCE_PASSWORD` / `SPRING_DATASOURCE_PASSWORD` | `laundry123` |
+| `DATASOURCE_URL` / `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/laundry` |
+| `DATASOURCE_USERNAME` / `SPRING_DATASOURCE_USERNAME` | `miguel` |
+| `DATASOURCE_PASSWORD` / `SPRING_DATASOURCE_PASSWORD` | `Gallego` |
 | `JWT_SECRET` | `f5bq3MoI4cTwg0pw1yEJ8klHYupJS5zUqQLoe51UDq4=` |
 | `JWT_EXPIRATION` | `86400000` |
 

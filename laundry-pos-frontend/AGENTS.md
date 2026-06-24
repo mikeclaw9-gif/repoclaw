@@ -26,7 +26,7 @@
 - `POSComponent.createOrder()` hardcodes `userId: 1` (`src/app/modules/pos/pos.component.ts:276`).
 - No `.gitignore` — `git add` could commit `node_modules/`.
 - Proxy target is `localhost:8082` (in `proxy.conf.json`), not `8080`.
-- Docker nginx proxies `/api` → `http://backend:8082/api` (Docker network), not `localhost`.
+- Docker nginx proxies `/api` → `http://backend:8085/api` (Docker network), not `localhost`.
 - No `docker-compose.yml` at root — README mentions one but it doesn't exist.
 
 <!-- CODEGRAPH_START -->

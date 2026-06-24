@@ -1,39 +1,82 @@
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: laundry-postgres
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: laundry-pos-db
     environment:
-      POSTGRES_DB: laundrypos
-      POSTGRES_USER: laundry
-      POSTGRES_PASSWORD: laundry123
-    ports:
-      - "5433:5432"
+      POSTGRES_DB: laundry
+      POSTGRES_USER: miguel
+      POSTGRES_PASSWORD: Gallego
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - laundry-network
-
-  backend:
-    build: .
-    container_name: laundry-backend
-    depends_on:
-      - postgres
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/laundrypos
-      SPRING_DATASOURCE_USERNAME: laundry
-      SPRING_DATASOURCE_PASSWORD: laundry123
-      JWT_SECRET: ${JWT_SECRET:-mySecretKeyForJWTTokenGeneration2024}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      - db_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
     ports:
-      - "8082:8080"
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U miguel -d laundry"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - laundry-network
+    restart: unless-stopped
+
+  # Redis for caching/sessions
+  redis:
+    image: redis:7-alpine
+    container_name: laundry-pos-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - laundry-network
+    restart: unless-stopped
+
+  # Spring Boot API Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laundry-pos-api
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/laundry
+      SPRING_DATASOURCE_USERNAME: miguel
+      SPRING_DATASOURCE_PASSWORD: Gallego
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      JWT_SECRET: ${JWT_SECRET:-f5bq3MoI4cTwg0pw1yEJ8klHYupJS5zUqQLoe51UDq4=}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      SERVER_PORT: 8085
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+    ports:
+      - "8085:8085"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - laundry-network
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
 
 networks:
   laundry-network:
     driver: bridge
+    name: laundry-pos-network
